@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Analysis Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.1.0/dist/chartjs-adapter-luxon.min.js"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans">
+
+    <div id="loading-overlay" class="loading-overlay hidden fixed inset-0 bg-gray-900 bg-opacity-95 flex flex-col items-center justify-center z-50">
+        <div class="animate-spin rounded-full h-20 w-20 border-t-4 border-b-4 border-blue-500"></div>
+        <p class="text-gray-300 text-lg mt-4">Analyzing stocks, please wait...</p>
+        <p class="text-gray-400 text-sm mt-2">This may take a moment as we fetch the latest data.</p>
+    </div>
+
+    <div class="container mx-auto p-6">
+        <h1 class="text-4xl font-bold text-center text-blue-400 mb-8">Stock Insight Dashboard</h1>
+
+        <div id="overall-analysis-error" class="message-box p-3 rounded mb-4 text-center hidden"></div>
+
+        <div class="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
+            <h2 class="text-2xl font-semibold text-blue-300 mb-4">Your Watchlist</h2>
+            <div class="flex flex-wrap gap-4 mb-4">
+                <input type="text" id="new-ticker-input" placeholder="Add Ticker (e.g., AAPL)" class="p-2 rounded bg-gray-700 text-gray-100 border border-gray-600 focus:outline-none focus:border-blue-500 flex-grow">
+                <button id="add-ticker-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-semibold transition duration-200">Add to Watchlist</button>
+            </div>
+            <div id="watchlist-container" class="flex flex-wrap gap-2 text-gray-300">
+                <p class="text-gray-400">Loading watchlist...</p>
+            </div>
+        </div>
+
+        <div class="text-center mb-8">
+            <button id="analyze-all-stocks-btn" class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg text-xl font-semibold shadow-md transition duration-200">Analyze All Stocks</button>
+        </div>
+
+        <div class="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
+            <h2 class="text-2xl font-semibold text-blue-300 mb-4">Overall Stock Analysis</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-gray-800 rounded-lg">
+                    <thead>
+                        <tr class="bg-gray-700 text-gray-300 uppercase text-sm leading-normal">
+                            <th class="py-3 px-4 text-left">Ticker</th>
+                            <th class="py-3 px-4 text-left">Company Name</th>
+                            <th class="py-3 px-4 text-left">Current Price</th>
+                            <th class="py-3 px-4 text-left">Price Movement</th>
+                            <th class="py-3 px-4 text-left">Score</th>
+                            <th class="py-3 px-4 text-left">Suggestion</th>
+                        </tr>
+                    </thead>
+                    <tbody id="analysis-table-body" class="text-gray-300 text-sm font-light">
+                        <tr><td colspan="6" class="py-4 text-center text-gray-400">No analysis available. Click "Analyze All Stocks" to begin.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
+            <h2 class="text-2xl font-semibold text-blue-300 mb-4">Long-Term Investment Picks</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-gray-800 rounded-lg">
+                    <thead>
+                        <tr class="bg-gray-700 text-gray-300 uppercase text-sm leading-normal">
+                            <th class="py-3 px-4 text-left">Ticker</th>
+                            <th class="py-3 px-4 text-left">Company Name</th>
+                            <th class="py-3 px-4 text-left">Current Price</th>
+                            <th class="py-3 px-4 text-left">Price Movement</th>
+                            <th class="py-3 px-4 text-left">Score</th>
+                            <th class="py-3 px-4 text-left">Suggestion</th>
+                        </tr>
+                    </thead>
+                    <tbody id="long-term-table-body" class="text-gray-300 text-sm font-light">
+                        <tr><td colspan="6" class="py-4 text-center text-gray-400">No long-term picks identified yet.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
+            <h2 class="text-2xl font-semibold text-blue-300 mb-4">Short-Term Opportunities</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-gray-800 rounded-lg">
+                    <thead>
+                        <tr class="bg-gray-700 text-gray-300 uppercase text-sm leading-normal">
+                            <th class="py-3 px-4 text-left">Ticker</th>
+                            <th class="py-3 px-4 text-left">Company Name</th>
+                            <th class="py-3 px-4 text-left">Current Price</th>
+                            <th class="py-3 px-4 text-left">Price Movement</th>
+                            <th class="py-3 px-4 text-left">Score</th>
+                            <th class="py-3 px-4 text-left">Suggestion</th>
+                        </tr>
+                    </thead>
+                    <tbody id="short-term-table-body" class="text-gray-300 text-sm font-light">
+                        <tr><td colspan="6" class="py-4 text-center text-gray-400">No short-term opportunities identified at this time.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <dialog id="stock-detail-modal" class="modal-dialog hidden fixed inset-0 bg-gray-900 bg-opacity-95 p-6 rounded-lg shadow-xl w-11/12 max-w-4xl max-h-[90vh] overflow-y-auto transform scale-0 opacity-0 transition-all duration-300 ease-in-out">
+        <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+            <h2 class="text-3xl font-bold text-blue-400" id="modal-ticker-name"></h2>
+            <button id="close-modal-btn" class="text-gray-400 hover:text-gray-200 text-3xl font-bold">&times;</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <h3 class="text-xl font-semibold text-blue-300 mb-3">Company Information</h3>
+                <p><span class="font-medium text-gray-300">Company Name:</span> <span id="modal-company-name" class="text-gray-200"></span></p>
+                <p><span class="font-medium text-gray-300">Industry:</span> <span id="modal-industry" class="text-gray-200"></span></p>
+                <p><span class="font-medium text-gray-300">Sector:</span> <span id="modal-sector" class="text-gray-200"></span></p>
+                <p><span class="font-medium text-gray-300">Employees:</span> <span id="modal-employees" class="text-gray-200"></span></p>
+                <p><span class="font-medium text-gray-300">Website:</span> <span id="modal-website" class="text-gray-200"></span></p>
+                <p><span class="font-medium text-gray-300">IPO Date:</span> <span id="modal-ipo" class="text-gray-200"></span></p>
+                <p><span class="font-medium text-gray-300">Currency:</span> <span id="modal-currency" class="text-gray-200"></span></p>
+
+                <h3 class="text-xl font-semibold text-blue-300 mt-6 mb-3">Key Metrics</h3>
+                <p><span class="font-medium text-gray-300">Current Price:</span> <span id="modal-current-price" class="text-gray-200"></span></p>
+                <p><span class="font-medium text-gray-300">Price Change:</span> <span id="modal-price-change" class="text-gray-200 inline-block mr-2"></span><span id="modal-percent-change" class="text-gray-200 inline-block"></span></p>
+                <p><span class="font-medium text-gray-300">Open:</span> <span id="modal-open-price" class="text-gray-200"></span></p>
+                <p><span class="font-medium text-gray-300">Previous Close:</span> <span id="modal-previous-close" class="text-gray-200"></span></p>
+                <p><span class="font-medium text-gray-300">Day High:</span> <span id="modal-day-high" class="text-gray-200"></span></p>
+                <p><span class="font-medium text-gray-300">Day Low:</span> <span id="modal-day-low" class="text-gray-200"></span></p>
+                <p><span class="font-medium text-gray-300">Volume:</span> <span id="modal-volume" class="text-gray-200"></span></p>
+                <p><span class="font-medium text-gray-300">Market Cap:</span> <span id="modal-market-cap" class="text-gray-200"></span></p>
+                <p><span class="font-medium text-gray-300">P/E Ratio (Trailing):</span> <span id="modal-pe-ratio" class="text-gray-200"></span></p>
+                <p><span class="font-medium text-gray-300">P/E Ratio (Forward):</span> <span id="modal-forward-pe-ratio" class="text-gray-200"></span></p>
+                <p><span class="font-medium text-gray-300">Dividend Yield:</span> <span id="modal-dividend-yield" class="text-gray-200"></span></p>
+                <p><span class="font-medium text-gray-300">Ex-Dividend Date:</span> <span id="modal-ex-dividend-date" class="text-gray-200"></span></p>
+                <p><span class="font-medium text-gray-300">52-Week High:</span> <span id="modal-52-week-high" class="text-gray-200"></span></p>
+                <p><span class="font-medium text-gray-300">52-Week Low:</span> <span id="modal-52-week-low" class="text-gray-200"></span></p>
+                <p><span class="font-medium text-gray-300">Beta:</span> <span id="modal-beta" class="text-gray-200"></span></p>
+
+                <h3 class="text-xl font-semibold text-blue-300 mt-6 mb-3">Analyst Insights</h3>
+                <p><span class="font-medium text-gray-300">Recommendation:</span> <span id="modal-analyst-recommendation" class="text-gray-200"></span></p>
+                <p><span class="font-medium text-gray-300">Target Price:</span> <span id="modal-analyst-target-price" class="text-gray-200"></span></p>
+                <p><span class="font-medium text-gray-300">Potential Upside:</span> <span id="modal-analyst-upside" class="text-gray-200"></span></p>
+            </div>
+
+            <div>
+                <h3 class="text-xl font-semibold text-blue-300 mb-3">Analysis Scores (0-100%)</h3>
+                <div class="space-y-2 mb-6">
+                    <p><span class="font-medium text-gray-300">Analyst Rating Score:</span> <span id="metric-analyst-rating" class="text-gray-200 font-bold"></span></p>
+                    <p><span class="font-medium text-gray-300">Analyst Upside Score:</span> <span id="metric-analyst-upside" class="text-gray-200 font-bold"></span></p>
+                    <p><span class="font-medium text-gray-300">Financial Analysis Score:</span> <span id="metric-financial-analysis" class="text-gray-200 font-bold"></span></p>
+                    <p><span class="font-medium text-gray-300">Technical Analysis Score:</span> <span id="metric-technical-analysis" class="text-gray-200 font-bold"></span></p>
+                </div>
+
+                <h3 class="text-xl font-semibold text-blue-300 mt-6 mb-3">Why This Recommendation?</h3>
+                <div id="modal-long-term-list" class="text-gray-400 text-sm">
+                    <p class="text-gray-400">Analysis will appear here.</p>
+                </div>
+
+                <h3 class="text-xl font-semibold text-blue-300 mt-6 mb-3">Business Summary</h3>
+                <div id="modal-business-summary" class="text-gray-400 text-sm leading-relaxed max-h-40 overflow-y-auto custom-scrollbar">
+                    No summary available.
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-6">
+            <h3 class="text-xl font-semibold text-blue-300 mb-3">Historical Performance</h3>
+            <div class="chart-container bg-gray-700 p-4 rounded-lg">
+                <canvas id="historicalChart" class="w-full h-64 md:h-80 lg:h-96"></canvas>
+            </div>
+        </div>
+
+    </dialog>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

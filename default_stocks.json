@@ -1,0 +1,13 @@
+   {
+        "companies": [
+"MSFT", "NVDA", "AAPL", "GOOGL", "AMZN", "META", "TSLA", "BRK-B", "JPM", "V",
+"UNH", "PG", "HD", "MA", "DIS", "VZ", "INTC", "CMCSA", "NFLX", "PEP",
+"KO", "MRK", "PFE", "T", "CSCO", "XOM", "ABT", "CVX", "NKE", "WMT", "LLY",
+"BMY", "TMO", "CRM", "AVGO", "QCOM", "TXN", "AMGN", "MDT", "COST", "HON",
+"PM", "NEE", "IBM", "ORCL", "INTU", "SBUX", "ADBE", "BA", "CAT", "MMM",
+"GE", "GS", "TGT"
+        ],
+        "index_funds": [
+            "SPY", "QQQ", "DIA", "IWM", "VT"
+        ]
+    }
